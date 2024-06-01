@@ -652,6 +652,13 @@ def parse_arguments(arg_strings=None):
     
     return args
 
+# Consider colours equal if all components are close enough (their difference is smaller than 1e-6)
+def colours_are_equal(colour1, colour2, espilon=1e-6):
+    return all(abs(colour1[i]-colour2[i])<espilon for i in range(4))
+
+# Check if the given color is in the colour list
+def colour_in_list(colour, colour_list):
+    return any(colours_are_equal(colour, c) for c in colour_list)
 
 def args_to_outlines(args):
     """
@@ -666,12 +673,14 @@ def args_to_outlines(args):
         )
     
     logging.info("Converting SVG into line segments...")
+    outlines = svg_to_outlines(args.svg)
+
     filtered_lines = [
         line
-        for colour, thickness, line in svg_to_outlines(args.svg)
+        for colour, thickness, line in outlines
         if (
             # Filter by colour
-            (args.colour is None or colour in args.colour) and
+            (args.colour is None or colour_in_list(colour, args.colour)) and
             # Remove regmarks
             (
                 args.include_regmarks or
